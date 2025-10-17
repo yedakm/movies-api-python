@@ -2,8 +2,6 @@
 
 services:
   movies-api:
-    # Docker akan mengunduh kode dari GitHub ini dan membangun image dari sana.
-    # Pastikan username GitHub (yedaikan) sesuai dengan milikmu.
     build:
       context: https://github.com/yedakm/movies-api-python.git#main
       dockerfile: app/Dockerfile # Menentukan lokasi Dockerfile di dalam repo
