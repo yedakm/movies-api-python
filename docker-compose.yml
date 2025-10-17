@@ -1,15 +1,7 @@
+version: "3.9"
 services:
-  movies-api-node:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: movies-api-python
+  movie-api:
+    build: .
+    container_name: movie-api
     ports:
-      - "50702:8000"
-    restart: unless-stopped
-    # Optional healthcheck (nice for labs)
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8000/movies"]
-      interval: 20s
-      timeout: 5s
-      retries: 5
+      - "8000:8000"
