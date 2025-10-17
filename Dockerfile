@@ -3,4 +3,4 @@ WORKDIR /app
 COPY . /app
 RUN pip install flask mysql-connector-python
 EXPOSE 8000
-CMD ["python", "app.py"]
+CMD ["python", "main.py"]
