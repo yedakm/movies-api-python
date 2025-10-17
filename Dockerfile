@@ -1,6 +1,15 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 WORKDIR /app
-COPY . /app
-RUN pip install flask mysql-connector-python
+
+# Install only what we need
+RUN pip install --no-cache-dir Flask==3.0.3 mysql-connector-python==9.0.0
+
+# Copy app
+COPY app ./app
+
 EXPOSE 8000
-CMD ["python", "main.py"]
+CMD ["python", "app/main.py"]
