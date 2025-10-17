@@ -1,67 +1,89 @@
-from flask import Flask, jsonify, request # Diambil dari pekerjaan Anggota 2
-import mysql.connector
+// Minimal Express + MySQL2 (hardcoded config, one endpoint)
 
-# ==== SETTINGS (Tetap sama) ====
-DB_HOST = "103.157.97.107"
-DB_PORT = 3306
-DB_USER = "devops"
-DB_PASSWORD = "ubaya"
-DB_NAME = "movie"
-# =================================
+const express = require("express");
+const mysql = require("mysql2/promise");
 
-app = Flask(__name__)
+const app = express();
 
-def get_db_conn():
-    return mysql.connector.connect(
-        host=DB_HOST, port=DB_PORT, user=DB_USER,
-        password=DB_PASSWORD, database=DB_NAME
-    )
+// ==== HARD-CODED SETTINGS ====
+const DB_HOST = "103.16.116.159";
+const DB_PORT = 3306;
+const DB_USER = "devops";
+const DB_PASSWORD = "ubaya";
+const DB_NAME = "movie";
+const PORT = 8000;
+// =============================
 
-@app.get("/movies")
-def get_movies():
-    # --- BAGIAN PEKERJAAN ANGGOTA 2 ---
-    # Mengambil parameter 'title' dari URL
-    title_query = request.args.get('title')
-    
-    try:
-        conn = get_db_conn()
-        cur = conn.cursor()
+const pool = mysql.createPool({
+  host: DB_HOST,
+  port: DB_PORT,
+  user: DB_USER,
+  password: DB_PASSWORD,
+  database: DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 5,
+  queueLimit: 0,
+});
 
-        # Logika SQL digabungkan antara pekerjaan Anggota 1 dan 2
-        if title_query:
-            # Jika ada filter judul
-            # Menggabungkan JOIN (Anggota 1) dan WHERE (Anggota 2)
-            sql = """
-                SELECT m.*, mp.poster_path
-                FROM movies m
-                LEFT JOIN movie_poster mp ON m.id = mp.movie_id
-                WHERE m.title LIKE %s
-                LIMIT 50;
-            """
-            params = (f"%{title_query}%",)
-            cur.execute(sql, params)
-        else:
-            # Jika tidak ada filter, hanya menjalankan query dari Anggota 1
-            # --- BAGIAN PEKERJAAN ANGGOTA 1 ---
-            sql = """
-                SELECT m.*, mp.poster_path
-                FROM movies m
-                LEFT JOIN movie_poster mp ON m.id = mp.movie_id
-                LIMIT 50;
-            """
-            cur.execute(sql)
+// === ENDPOINT 1: Tampilkan semua movie ===
+app.get("/movies", async (_req, res) => {
+  const sql = `SELECT * FROM movies LIMIT 50;`;
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const [rows] = await conn.query(sql);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: String(err) });
+  } finally {
+    if (conn) conn.release();
+  }
+});
 
-        # Kode ini secara otomatis menangani kolom tambahan 'poster_path'
-        cols = [d[0] for d in cur.description]
-        data = [dict(zip(cols, row)) for row in cur.fetchall()]
-        return jsonify(data)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        try:
-            cur.close(); conn.close()
-        except Exception:
-            pass
+// === ENDPOINT 2: Tampilkan movie beserta poster ===
+app.get("/movies-with-poster", async (_req, res) => {
+  const sql = `
+    SELECT m.id, m.title, p.poster_url
+    FROM movies m
+    JOIN movie_poster p ON m.id = p.movie_id
+    LIMIT 50;
+  `;
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const [rows] = await conn.query(sql);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: String(err) });
+  } finally {
+    if (conn) conn.release();
+  }
+});
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+app.get("/movies/filter", async (req, res) => {
+  const title = req.query.title; // ambil parameter dari URL, misal ?title=Avatar
+
+  if (!title) {
+    return res.status(400).json({ error: "Parameter 'title' wajib diisi." });
+  }
+
+  const sql = `SELECT * FROM movies WHERE title LIKE ? LIMIT 50;`;
+  let conn;
+
+  try {
+    conn = await pool.getConnection();
+    const [rows] = await conn.query(sql, [`%${title}%`]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: String(err) });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Movies API (Node) running on http://0.0.0.0:${PORT}`);
+});
