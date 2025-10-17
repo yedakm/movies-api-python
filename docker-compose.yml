@@ -1,11 +1,15 @@
-# Lokasi: tester-api-github/docker-compose.yml
-
 services:
-  movies-api:
+  movies-api-node:
     build:
-      context: https://github.com/yedakm/movies-api-python.git#main
-      dockerfile: Dockerfile # Menentukan lokasi Dockerfile di dalam repo
-    container_name: movies-api-from-github
+      context: .
+      dockerfile: Dockerfile
+    container_name: movies-api-node
     ports:
-      - "50701:8000" # Port 8000 di komputermu terhubung ke port 8000 di dalam container
+      - "50702:8000"
     restart: unless-stopped
+    # Optional healthcheck (nice for labs)
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/movies"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
