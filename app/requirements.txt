@@ -1,0 +1,3 @@
+# Lokasi: movies-api-python/app/requirements.txt
+Flask
+mysql-connector-python
