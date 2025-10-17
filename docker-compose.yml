@@ -4,7 +4,7 @@ services:
   movies-api:
     build:
       context: https://github.com/yedakm/movies-api-python.git#main
-      dockerfile: app/Dockerfile # Menentukan lokasi Dockerfile di dalam repo
+      dockerfile: Dockerfile # Menentukan lokasi Dockerfile di dalam repo
     container_name: movies-api-from-github
     ports:
       - "8000:8000" # Port 8000 di komputermu terhubung ke port 8000 di dalam container
