@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: movies-api-node
+    container_name: movies-api-python
     ports:
       - "50702:8000"
     restart: unless-stopped
