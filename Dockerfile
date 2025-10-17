@@ -1,13 +1,6 @@
-FROM node:20-alpine
-
-ENV NODE_ENV=production
-WORKDIR /usr/src/app
-
-# Install runtime deps directly (no package.json)
-RUN npm install --omit=dev express@4.19.2 mysql2@3.10.0
-
-# Copy source
-COPY app ./app
-
+FROM python:3.10-slim
+WORKDIR /app
+COPY . /app
+RUN pip install flask mysql-connector-python
 EXPOSE 8000
-CMD ["node", "app/index.js"]
+CMD ["python", "app.py"]
