@@ -1,15 +1,13 @@
-# Lokasi: movies-api-python/app/app.py
-
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request # Diambil dari pekerjaan Anggota 2
 import mysql.connector
 
-# ==== SETTINGS DENGAN IP BARU ANDA ====
-DB_HOST = "103.16.116.159"
+# ==== SETTINGS (Tetap sama) ====
+DB_HOST = "103.157.97.107"
 DB_PORT = 3306
 DB_USER = "devops"
 DB_PASSWORD = "ubaya"
 DB_NAME = "movie"
-# ======================================
+# =================================
 
 app = Flask(__name__)
 
@@ -21,19 +19,39 @@ def get_db_conn():
 
 @app.get("/movies")
 def get_movies():
+    # --- BAGIAN PEKERJAAN ANGGOTA 2 ---
+    # Mengambil parameter 'title' dari URL
     title_query = request.args.get('title')
+    
     try:
         conn = get_db_conn()
         cur = conn.cursor()
 
+        # Logika SQL digabungkan antara pekerjaan Anggota 1 dan 2
         if title_query:
-            sql = "SELECT * FROM movies WHERE title LIKE %s LIMIT 50;"
+            # Jika ada filter judul
+            # Menggabungkan JOIN (Anggota 1) dan WHERE (Anggota 2)
+            sql = """
+                SELECT m.*, mp.poster_path
+                FROM movies m
+                LEFT JOIN movie_poster mp ON m.id = mp.movie_id
+                WHERE m.title LIKE %s
+                LIMIT 50;
+            """
             params = (f"%{title_query}%",)
             cur.execute(sql, params)
         else:
-            sql = "SELECT * FROM movies LIMIT 50;"
+            # Jika tidak ada filter, hanya menjalankan query dari Anggota 1
+            # --- BAGIAN PEKERJAAN ANGGOTA 1 ---
+            sql = """
+                SELECT m.*, mp.poster_path
+                FROM movies m
+                LEFT JOIN movie_poster mp ON m.id = mp.movie_id
+                LIMIT 50;
+            """
             cur.execute(sql)
 
+        # Kode ini secara otomatis menangani kolom tambahan 'poster_path'
         cols = [d[0] for d in cur.description]
         data = [dict(zip(cols, row)) for row in cur.fetchall()]
         return jsonify(data)
