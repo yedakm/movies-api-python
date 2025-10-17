@@ -1,13 +1,15 @@
-from flask import Flask, jsonify
+# Lokasi: movies-api-python/app/app.py
+
+from flask import Flask, jsonify, request
 import mysql.connector
 
-# ==== HARD-CODED SETTINGS (change here for your class) ====
+# ==== SETTINGS DENGAN IP BARU ANDA ====
 DB_HOST = "103.16.116.159"
 DB_PORT = 3306
 DB_USER = "devops"
 DB_PASSWORD = "ubaya"
-DB_NAME = "movie"   # change if your DB name differs
-# ==========================================================
+DB_NAME = "movie"
+# ======================================
 
 app = Flask(__name__)
 
@@ -19,11 +21,19 @@ def get_db_conn():
 
 @app.get("/movies")
 def get_movies():
-    sql = f"SELECT * FROM  movies LIMIT 50;"
+    title_query = request.args.get('title')
     try:
         conn = get_db_conn()
         cur = conn.cursor()
-        cur.execute(sql)
+
+        if title_query:
+            sql = "SELECT * FROM movies WHERE title LIKE %s LIMIT 50;"
+            params = (f"%{title_query}%",)
+            cur.execute(sql, params)
+        else:
+            sql = "SELECT * FROM movies LIMIT 50;"
+            cur.execute(sql)
+
         cols = [d[0] for d in cur.description]
         data = [dict(zip(cols, row)) for row in cur.fetchall()]
         return jsonify(data)
@@ -36,5 +46,4 @@ def get_movies():
             pass
 
 if __name__ == "__main__":
-    # Local run: python app/main.py
     app.run(host="0.0.0.0", port=8000)
